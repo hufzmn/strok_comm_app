@@ -29,169 +29,196 @@ footer{padding:12px;text-align:center;font-size:13px;color:#666}
 </head>
 <body>
 <header>
-<h1>Komunikasi Strok</h1>
-<div class="controls">
-<button id="clearBtn" class="big secondary">Padam</button>
-<button id="speakBtn" class="big">Sebut</button>
-<button id="toggleScan" class="big secondary">Mula Imbasan</button>
-</div>
+  <h1>Komunikasi Strok</h1>
+  <div class="controls">
+    <button id="clearBtn" class="big secondary">Padam</button>
+    <button id="speakBtn" class="big">Sebut</button>
+    <button id="toggleScan" class="big secondary">Mula Imbasan</button>
+  </div>
 </header>
 <main>
-<div id="output">
-<div id="text" contenteditable="false" aria-label="mesej"></div>
-<button id="backspace" class="btn secondary">⌫</button>
-</div>
+  <div id="output">
+    <div id="text" contenteditable="false" aria-label="mesej"></div>
+    <button id="backspace" class="btn secondary">⌫</button>
+  </div>
 
-<div id="grid"></div>
+  <div id="grid"></div>
 
-<!-- New row for Space and Call -->
-<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
-<button id="space" class="btn secondary" style="flex:1 0 30%;">Kosong</button>
-<button id="call" class="btn callBtn" style="flex:1 0 30%;">Panggil</button>
-</div>
+  <!-- Baris tambahan: butang Kosong & Panggil -->
+  <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+    <button id="space" class="btn secondary" style="flex:1 0 30%;">Kosong</button>
+    <button id="call" class="btn callBtn" style="flex:1 0 30%;">Panggil</button>
+  </div>
 
-<div id="settings">
-<label>Saiz huruf: <input id="sizeRange" type="range" min="56" max="140" value="72"></label>
-<label>Kelajuan imbasan (ms): <input id="speedRange" type="range" min="400" max="2500" value="900"></label>
-<label><input id="enableTTS" type="checkbox" checked> Suara dihidupkan</label>
-</div>
+  <div id="settings">
+    <label>Saiz huruf: <input id="sizeRange" type="range" min="56" max="140" value="72"></label>
+    <label>Kelajuan imbasan (ms): <input id="speedRange" type="range" min="400" max="2500" value="900"></label>
+    <label><input id="enableTTS" type="checkbox" checked> Suara dihidupkan</label>
+  </div>
 </main>
 <footer>Tekan huruf untuk menaip. Gunakan mod imbasan jika perlu bantuan untuk memilih huruf.</footer>
 
 <script>
 (function(){
-const letters = [
-'Q','W','E','R','T','Y','U','I','O','P',
-'A','S','D','F','G','H','J','K','L','Z',
-'X','C','V','B','N','M'
-];
+  const letters = [
+    'Q','W','E','R','T','Y','U','I','O','P',
+    'A','S','D','F','G','H','J','K','L','Z',
+    'X','C','V','B','N','M'
+  ];
 
-const grid = document.getElementById('grid');
-const textDiv = document.getElementById('text');
-const speakBtn = document.getElementById('speakBtn');
-const clearBtn = document.getElementById('clearBtn');
-const backspace = document.getElementById('backspace');
-const spaceBtn = document.getElementById('space');
-const callBtn = document.getElementById('call');
-const toggleScan = document.getElementById('toggleScan');
-const sizeRange = document.getElementById('sizeRange');
-const speedRange = document.getElementById('speedRange');
-const enableTTS = document.getElementById('enableTTS');
+  const grid = document.getElementById('grid');
+  const textDiv = document.getElementById('text');
+  const speakBtn = document.getElementById('speakBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const backspace = document.getElementById('backspace');
+  const spaceBtn = document.getElementById('space');
+  const callBtn = document.getElementById('call');
+  const toggleScan = document.getElementById('toggleScan');
+  const sizeRange = document.getElementById('sizeRange');
+  const speedRange = document.getElementById('speedRange');
+  const enableTTS = document.getElementById('enableTTS');
 
-let scanning = false;
-let scanTimer = null;
-let currentRow = 0;
+  let scanning = false;
+  let scanTimer = null;
+  let currentRow = 0;
 
-function renderGrid(){
+  function renderGrid(){
     grid.innerHTML = '';
     letters.forEach(l=>{
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.tabIndex = 0;
-        cell.textContent = l;
-        cell.addEventListener('click', ()=> addLetter(l));
-        grid.appendChild(cell);
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.tabIndex = 0;
+      cell.textContent = l;
+      cell.addEventListener('click', ()=> addLetter(l));
+      grid.appendChild(cell);
     });
-}
+  }
 
-function addLetter(l){
+  function addLetter(l){
     textDiv.textContent += l;
     if(enableTTS.checked) speak(l);
-}
+  }
 
-function back(){
+  function back(){
     textDiv.textContent = textDiv.textContent.slice(0,-1);
-}
+  }
 
-function space(){ textDiv.textContent += ' '; }
+  function space(){ textDiv.textContent += ' '; }
 
-function clearAll(){ textDiv.textContent = ''; }
+  function clearAll(){ textDiv.textContent = ''; }
 
-function speak(text){
+  function speak(text){
     if(!('speechSynthesis' in window)) return;
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ms-MY';
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
-}
+  }
 
-function callAlert(){
+  function callAlert(){
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
     o.type = 'sine';
-    o.frequency.setValueAtTime(600, audioCtx.currentTime); // softer pitch
+    o.frequency.setValueAtTime(600, audioCtx.currentTime);
     gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.2); // fade in
-    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.2);     // fade out
+    gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.3);
+    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
 
     o.connect(gainNode);
     gainNode.connect(audioCtx.destination);
 
     o.start();
-    o.stop(audioCtx.currentTime + 1.2); // subtle 1.2 sec ring
-}
+    o.stop(audioCtx.currentTime + 1.0);
+  }
 
-speakBtn.addEventListener('click', ()=>{ if(textDiv.textContent.trim()) speak(textDiv.textContent); });
-clearBtn.addEventListener('click', clearAll);
-backspace.addEventListener('click', back);
-spaceBtn.addEventListener('click', space);
-callBtn.addEventListener('click', callAlert);
+  speakBtn.addEventListener('click', ()=>{ if(textDiv.textContent.trim()) speak(textDiv.textContent); });
+  clearBtn.addEventListener('click', clearAll);
+  backspace.addEventListener('click', back);
+  spaceBtn.addEventListener('click', space);
+  callBtn.addEventListener('click', callAlert);
 
-sizeRange.addEventListener('input', ()=>{
+  sizeRange.addEventListener('input', ()=>{
     document.documentElement.style.setProperty('--cell-size', sizeRange.value+'px');
-});
+  });
 
-function startScanning(){
-    scanning = true; toggleScan.textContent = 'Henti Imbasan';
+  function startScanning(){
+    scanning = true;
+    toggleScan.textContent = 'Henti Imbasan';
     const cols = 10;
-    const rows = Math.ceil(letters.length/cols);
+    const rows = Math.ceil(letters.length / cols);
     currentRow = 0;
     highlightRow(currentRow);
     scanRow(rows, cols);
-}
+  }
 
-function stopScanning(){ scanning=false; toggleScan.textContent = 'Mula Imbasan'; clearHighlights(); if(scanTimer) clearInterval(scanTimer); }
+  function stopScanning(){
+    scanning = false;
+    toggleScan.textContent = 'Mula Imbasan';
+    clearHighlights();
+    if(scanTimer) clearInterval(scanTimer);
+  }
 
-function clearHighlights(){ document.querySelectorAll('.cell').forEach(c=>{c.classList.remove('highlight'); c.classList.remove('row-highlight');}); }
+  function clearHighlights(){
+    document.querySelectorAll('.cell').forEach(c => {
+      c.classList.remove('highlight');
+      c.classList.remove('row-highlight');
+    });
+  }
 
-function highlightRow(r){ clearHighlights(); const cols = 10; for(let c=0;c<cols;c++){ const idx = r*cols + c; const cell = grid.children[idx]; if(cell) cell.classList.add('row-highlight'); }}
-
-function highlightCell(r,c){ clearHighlights(); const idx = r*10 + c; const cell = grid.children[idx]; if(cell) cell.classList.add('highlight'); }
-
-function scanRow(rows, cols){
-    let colIndex = 0;
-    scanTimer = setInterval(()=>{
-      highlightCell(currentRow, colIndex);
-      const idx = currentRow*cols + colIndex;
+  function highlightRow(r){
+    clearHighlights();
+    const cols = 10;
+    for(let c = 0; c < cols; c++){
+      const idx = r * cols + c;
       const cell = grid.children[idx];
-      if(cell && enableTTS.checked){ speak(cell.textContent); }
+      if(cell) cell.classList.add('row-highlight');
+    }
+  }
+
+  function highlightCell(r, c){
+    clearHighlights();
+    const idx = r * 10 + c;
+    const cell = grid.children[idx];
+    if(cell) cell.classList.add('highlight');
+  }
+
+  function scanRow(rows, cols){
+    let colIndex = 0;
+    scanTimer = setInterval(() => {
+      highlightCell(currentRow, colIndex);
+      const idx = currentRow * cols + colIndex;
+      const cell = grid.children[idx];
+      if(cell && enableTTS.checked){
+        speak(cell.textContent);
+      }
       colIndex++;
-      if(colIndex>=cols){
-        colIndex=0; currentRow++;
-        if(currentRow>=rows) currentRow=0;
+      if(colIndex >= cols){
+        colIndex = 0;
+        currentRow++;
+        if(currentRow >= rows) currentRow = 0;
         highlightRow(currentRow);
       }
     }, Number(speedRange.value));
-}
+  }
 
-toggleScan.addEventListener('click', ()=>{
-    if(!scanning){ startScanning(); } else { stopScanning(); }
-});
+  toggleScan.addEventListener('click', () => {
+    if(!scanning) startScanning();
+    else stopScanning();
+  });
 
-document.addEventListener('keydown',(e)=>{
-    if(e.code==='Space' && scanning){
-        e.preventDefault();
-        const highlighted = document.querySelector('.cell.highlight');
-        if(highlighted){ addLetter(highlighted.textContent); }
+  document.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' && scanning){
+      e.preventDefault();
+      const highlighted = document.querySelector('.cell.highlight');
+      if(highlighted) addLetter(highlighted.textContent);
     }
-});
+  });
 
-renderGrid();
-document.documentElement.style.setProperty('--cell-size', sizeRange.value+'px');
+  renderGrid();
+  document.documentElement.style.setProperty('--cell-size', sizeRange.value + 'px');
 })();
 </script>
 </body>
 </html>
-
